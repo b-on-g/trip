@@ -5,7 +5,6 @@ $bog_trip $mol_view
 			width \768px
 			minHeight \720px
 			flexDirection \column
-			background \#ffffff
 		sub /
 			<= Title
 			<= Dist
