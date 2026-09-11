@@ -1,0 +1,46 @@
+$bog_trip $mol_view
+	sub / <= Page
+	Page $mol_view
+		style *
+			width \768px
+			minHeight \720px
+			flexDirection \column
+			background \#ffffff
+		sub /
+			<= Title
+			<= Dist
+			<= Rate
+			<= Price
+			<= Fuel
+			<= Cost
+			<= Total
+			<= Cell
+			<= Plot
+			<= Dest
+	Title $mol_paragraph title \Калькулятор поездки
+	Dist $mol_number hint \Расстояние, км
+	Rate $mol_number hint \Расход, л на км
+	Price $mol_number hint \Цена литра, ₽
+	Fuel $bog_vmap_part_calc
+		left <= dist_value
+		right <= rate_value
+		op? \mul
+	Cost $bog_vmap_part_calc
+		left <= fuel_result
+		right <= price_value
+		op? \mul
+	Total $mol_paragraph title <= total
+	Cell $bog_vmap_part_cell code? \return ( 2.31 * 7.2 ).toFixed( 1 ) + " кг CO2 на 100 км"
+	Plot $bog_vmap_part_plot
+		title \Расход по дням, л
+		values <= days
+	Dest $bog_vmap_part_map
+		marker? \Пункт назначения
+		lat? 55.75
+		lng? 37.62
+	dist_value = Dist value
+	rate_value = Rate value
+	fuel_result = Fuel result
+	price_value = Price value
+	total null
+	days null
