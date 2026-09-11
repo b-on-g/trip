@@ -18,6 +18,15 @@ jobs:
 
     steps:
 
+    # Документ собран из деталей vmap, поэтому в бандл приложения приезжает и
+    # node-тест пака деталей, а он требует собранного `bog/vmap/part/-/web.view.tree`.
+    # В чистом CI его нет, и сборка приложения падает на чужом тесте. Поэтому
+    # пак деталей собирается первым шагом, своим именем.
+    - uses: hyoo-ru/mam_build@master2
+      with:
+        package: 'bog/vmap'
+        modules: 'part'
+
     - uses: hyoo-ru/mam_build@master2
       with:
         package: 'bog/trip'
