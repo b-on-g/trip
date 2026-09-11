@@ -1,3 +1,7 @@
+$mol_theme_auto $mol_plugin
+	light \$mol_theme_light
+	attr * mol_theme <= theme <= dark \$mol_theme_dark
+
 $mol_paragraph $mol_view
 	line_height 24
 	letter_width 7
@@ -1392,7 +1396,5 @@ $bog_trip $mol_view
 	price_value = Price value
 	total null
 	days null
-
-$mol_theme_auto $mol_plugin
-	light \$mol_theme_light
-	attr * mol_theme <= theme <= dark \$mol_theme_dark
+	plugins /
+		<= Theme $mol_theme_auto
