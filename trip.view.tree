@@ -43,3 +43,5 @@ $bog_trip $mol_view
 	price_value = Price value
 	total null
 	days null
+	plugins /
+		<= Theme $mol_theme_auto
