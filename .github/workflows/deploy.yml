@@ -18,42 +18,27 @@ jobs:
 
     steps:
 
-    # Действие `hyoo-ru/mam_build` здесь не годится: оно клонирует ЭТОТ репозиторий
-    # в папку пака и умеет собирать модули только своего пака. А документ собран из
-    # деталей vmap, поэтому в бандл приложения приезжает и node-тест пака деталей,
-    # а тот читает с диска `bog/vmap/part/-/web.view.tree`. В чистом CI этого файла
-    # нет, и сборка приложения падает на чужом тесте. Поэтому шаги расписаны руками:
-    # первый заход тянет паки по meta.tree и падает на том самом тесте, второй
-    # собирает пак деталей своим именем, третий собирает приложение начисто.
-    - name: Собрать приложение
-      run: |
-        set -uo pipefail
-        git clone --depth=1 --branch master https://github.com/hyoo-ru/mam.git .
-        git clone --no-checkout --depth=1 https://github.com/${{ github.repository }}.git bog/trip
-        git -C bog/trip checkout "$GITHUB_REF_NAME"
-        npm install --omit=optional
-        npm start bog/trip || echo "первый заход только тянет паки"
-        npm start bog/vmap/part
-        npm start bog/trip
-        test -s bog/trip/-/web.js
-        grep -q 'Audit passed' bog/trip/-/web.audit.js
-        grep -q 'Audit passed' bog/trip/-/node.audit.js
-        touch bog/trip/-/.nojekyll
+    - uses: hyoo-ru/mam_build@master2
+      with:
+        package: 'bog/trip'
 
-    - name: Cache-bust the bundle
-      if: github.ref == 'refs/heads/main'
+    - name: Audits
       run: |
         set -euo pipefail
-        stamp="${GITHUB_SHA::7}"
-        file="bog/trip/-/index.html"
-        sed -i "s|src=\"web.js\"|src=\"web.js?v=$stamp\"|" "$file"
-        grep -q "web.js?v=$stamp" "$file"
+        grep -q 'Audit passed' bog/trip/-/web.audit.js
+        grep -q 'Audit passed' bog/trip/-/node.audit.js
+
+    - name: Cache-bust the bundle
+      run: |
+        set -euo pipefail
+        sed -i "s|src=\"web.js\"|src=\"web.js?v=${GITHUB_SHA::7}\"|" bog/trip/-/index.html
+        grep -q "web.js?v=${GITHUB_SHA::7}" bog/trip/-/index.html
 
     - uses: hyoo-ru/gh-deploy@v4.4.1
-      if: github.ref == 'refs/heads/main'
       with:
         folder: 'bog/trip/-'
 
-    - name: URLs
-      if: github.ref == 'refs/heads/main'
-      run: echo "- https://b-on-g.github.io/trip/ — калькулятор поездки" >> "$GITHUB_STEP_SUMMARY"
+    - name: URL
+      run: |
+        set -euo pipefail
+        echo "- https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" >> "$GITHUB_STEP_SUMMARY"
