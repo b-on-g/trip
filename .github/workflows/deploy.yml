@@ -18,18 +18,27 @@ jobs:
 
     steps:
 
-    # Документ собран из деталей vmap, поэтому в бандл приложения приезжает и
-    # node-тест пака деталей, а он требует собранного `bog/vmap/part/-/web.view.tree`.
-    # В чистом CI его нет, и сборка приложения падает на чужом тесте. Поэтому
-    # пак деталей собирается первым шагом, своим именем.
-    - uses: hyoo-ru/mam_build@master2
-      with:
-        package: 'bog/vmap'
-        modules: 'part'
-
-    - uses: hyoo-ru/mam_build@master2
-      with:
-        package: 'bog/trip'
+    # Действие `hyoo-ru/mam_build` здесь не годится: оно клонирует ЭТОТ репозиторий
+    # в папку пака и умеет собирать модули только своего пака. А документ собран из
+    # деталей vmap, поэтому в бандл приложения приезжает и node-тест пака деталей,
+    # а тот читает с диска `bog/vmap/part/-/web.view.tree`. В чистом CI этого файла
+    # нет, и сборка приложения падает на чужом тесте. Поэтому шаги расписаны руками:
+    # первый заход тянет паки по meta.tree и падает на том самом тесте, второй
+    # собирает пак деталей своим именем, третий собирает приложение начисто.
+    - name: Собрать приложение
+      run: |
+        set -uo pipefail
+        git clone --depth=1 --branch master https://github.com/hyoo-ru/mam.git .
+        git clone --no-checkout --depth=1 https://github.com/${{ github.repository }}.git bog/trip
+        git -C bog/trip checkout "$GITHUB_REF_NAME"
+        npm install --omit=optional
+        npm start bog/trip || echo "первый заход только тянет паки"
+        npm start bog/vmap/part
+        npm start bog/trip
+        test -s bog/trip/-/web.js
+        grep -q 'Audit passed' bog/trip/-/web.audit.js
+        grep -q 'Audit passed' bog/trip/-/node.audit.js
+        touch bog/trip/-/.nojekyll
 
     - name: Cache-bust the bundle
       if: github.ref == 'refs/heads/main'
